@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서울 스케이트보드 파크 지도</title>
+    <style>
+        /* 기본 스타일 */
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+        #map { width: 100%; height: 100%; }
+        
+        /* 정보창 박스 */
+        .wrap { 
+            padding: 0; 
+            width: 280px; 
+            background: #fff; 
+            font-family: 'Malgun Gothic', sans-serif;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            overflow: hidden; 
+        }
+        
+        /* 헤더 */
+        .info-header { 
+            padding: 10px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #f1f2f6; 
+            border-bottom: 1px solid #ddd;
+            height: 30px; 
+        }
+        .info-title { font-weight: bold; font-size: 14px; color: #333; margin: 0; }
+        
+        /* 난이도 배지 색상 */
+        .badge { padding: 2px 5px; border-radius: 3px; font-size: 11px; color: white; font-weight: bold;}
+        .hard { background-color: #ff4757; }   /* 빨강 */
+        .medium { background-color: #ffa502; } /* 주황 */
+        .easy { background-color: #2ed573; }   /* 초록 */
+
+        /* 슬라이더 영역 */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            background: #fff;
+        }
+
+        .slide-item { width: 100%; height: 100%; display: none; }
+        .slide-item.active { display: block; }
+
+        /* [1번 슬라이드] 텍스트 설명판 */
+        .text-slide {
+            padding: 15px 25px; 
+            box-sizing: border-box;
+            background-color: #fff;
+            color: #333;
+            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            display: none;
+        }
+        .text-slide.active { display: flex; }
+
+        .info-row { font-size: 13px; margin-bottom: 8px; line-height: 1.5; }
+        .info-label { font-weight: bold; color: #333; margin-right: 5px; display:inline-block; width: 40px;}
+        .img-slide { object-fit: cover; }
+        
+        /* 화살표 버튼 */
+        .prev-btn, .next-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0,0,0,0.1); 
+            color: #333;
+            border: none;
+            padding: 10px 5px;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 10;
+            font-weight: bold;
+        }
+        .prev-btn:hover, .next-btn:hover { background-color: rgba(0,0,0,0.3); color: white;}
+        .prev-btn { left: 0; } .next-btn { right: 0; }
+        
+        .page-indicator {
+            position: absolute;
+            bottom: 5px; right: 10px; font-size: 10px; color: rgba(0,0,0,0.5);
+            background: rgba(255,255,255,0.7); padding: 2px 5px; border-radius: 3px; z-index: 20;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9dca9728dc03540c74a0fdd9c0e84c56"></script>
+
+    <script>
+        var mapContainer = document.getElementById('map'), 
+            mapOption = { 
+                center: new kakao.maps.LatLng(37.567475, 127.004690), // 시작: 훈련원 공원
+                level: 8 
+            };
+        var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+        // 빨간색 뾰족 핀
+        var imageSrc = "https://maps.google.com/mapfiles/ms/icons/red-dot.png"; 
+        var imageSize = new kakao.maps.Size(32, 32); 
+        var imageOption = {offset: new kakao.maps.Point(16, 32)}; 
+        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+
+        // 데이터 리스트 (보내주신 내용 적용 + 은평 추가)
+        var skateParks = [
+            { title: "훈련원 공원", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08:00-20:00", desc: "스트릿 성지, 대리석 타일 바닥, 바닥 많이 깨져있어서 난이도 높음", images: ["./culti1.jpg"] },
+            { title: "살곶이 스케이트파크", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08:00-23:00", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
+            { title: "서울숲 스케이트파크", lat: 37.5457255, lng: 127.0422293, level: "초/중급", levelClass: "easy", hours: "08:00-22:00", desc: " 바닥 재질 안좋음, 야간에 조명 있지만 어두움", images: ["./seoulforest1.jpg"] },
+            { title: "이촌 한강공원", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
+            { title: "광나루 스케이트파크", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwangnaru1.jpg"] },
+            { title: "노해 스케이트파크", lat: 37.6484306, lng: 127.0704715, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.png","./nohae2.jpg"] },
+            { title: "뚝섬 한강공원", lat: 37.529235, lng: 127.069562, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크, 난도 높은 기물부터 평지까지 난이도별로 다양", images: ["./ttukseom1.jpg"] },
+            { title: "난지 익스트림장", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유.", images: ["./nanji1.jpg"] },
+            { title: "보라매공원", lat: 37.493922, lng: 126.920977, level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.jpg"] },
+            { title: "디디미 스케이트파크", lat: 37.5784979, lng: 127.0347585, level: "중급", levelClass: "medium", hours: "09:00-23:00", desc: "정릉천변 다리밑에 위치, 우천 시 범람 주의, 조명이 좋아서 야간에도 잘 보임", images: ["./dedimi1.jpg"] },
+            { title: "익스트림 은평", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00 (월 휴무)", desc: "은평구 최초 전용 파크. 인공암벽장 옆.", images: ["./eunpyeong1.jpg"] }
+        ];
+
+        window.moveSlide = function(btn, direction) {
+            var container = btn.parentElement;
+            var items = container.querySelectorAll('.slide-item');
+            var indicator = container.querySelector('.page-indicator');
+            var currentIndex = 0;
+            for(var i=0; i<items.length; i++) { if(items[i].classList.contains('active')) { currentIndex = i; break; } }
+            items[currentIndex].classList.remove('active');
+            var nextIndex = currentIndex + direction;
+            if (nextIndex >= items.length) nextIndex = 0; if (nextIndex < 0) nextIndex = items.length - 1;
+            items[nextIndex].classList.add('active');
+            if(indicator) indicator.innerText = (nextIndex + 1) + " / " + items.length;
+        }
+
+        for (var i = 0; i < skateParks.length; i ++) {
+            var data = skateParks[i];
+            var marker = new kakao.maps.Marker({
+                map: map, 
+                position: new kakao.maps.LatLng(data.lat, data.lng),
+                image: markerImage 
+            });
+
+            var slidesHtml = `
+                <div class="slide-item text-slide active">
+                    <div class="info-row"><span class="info-label">⏰</span>${data.hours}</div>
+                    <div class="info-row"><span class="info-label">📝</span>${data.desc}</div>
+                    <div style="margin-top:10px; font-size:11px; color:#888; text-align:center;">(사진을 보려면 화살표 ❯ 클릭)</div>
+                </div>
+            `;
+            if(data.images && data.images.length > 0) {
+                for(var j=0; j<data.images.length; j++) {
+                    slidesHtml += `<img src="${data.images[j]}" class="slide-item img-slide">`;
+                }
+            }
+            var totalPages = 1 + (data.images ? data.images.length : 0);
+
+            var content = `
+                <div class="wrap">
+                    <div class="info-header">
+                        <span class="info-title">${data.title}</span>
+                        <span class="badge ${data.levelClass}">${data.level}</span>
+                    </div>
+                    <div class="slider-container">
+                        <button class="prev-btn" onclick="moveSlide(this, -1)">❮</button>
+                        <div class="slides">${slidesHtml}</div>
+                        <button class="next-btn" onclick="moveSlide(this, 1)">❯</button>
+                        <div class="page-indicator">1 / ${totalPages}</div>
+                    </div>
+                </div>
+            `;
+            var infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
+            (function(marker, infowindow) {
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    infowindow.open(map, marker);
+                });
+            })(marker, infowindow);
+        }
+    </script>
+</body>
+</html>
