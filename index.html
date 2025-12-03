@@ -3,46 +3,32 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>서울 스케이트보드 파크 지도</title>
+    <title>서울시 스케이트보드 파크 지도</title>
+    
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
     <style>
         /* 1. 기본 스타일 */
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif;}
         
-        /* 2. 레이아웃 (지도 위에 사이드바가 뜨는 구조) */
+        /* 2. 레이아웃 */
         .container { position: relative; width: 100%; height: 100%; }
-
-        /* 지도: 화면 전체를 꽉 채움 */
         #map { width: 100%; height: 100%; }
 
-        /* 3. 사이드바 (플로팅 디자인 적용 ⭐) */
+        /* 3. 사이드바 (플로팅 UI) */
         .sidebar {
-            position: absolute; /* 지도 위에 둥둥 뜸 */
-            top: 15px;    /* 위에서 15px 띄움 */
-            left: 15px;   /* 왼쪽에서 15px 띄움 */
-            bottom: 15px; /* 아래에서 15px 띄움 */
-            width: 360px; /* 너비 */
-            background: rgba(255, 255, 255, 0.95); /* 살짝 투명해서 답답함 줄임 */
-            z-index: 20;  /* 지도보다 위에 오게 함 */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15); /* 그림자 줘서 입체감 */
-            border-radius: 12px; /* 모서리 둥글게 */
-            display: flex; 
-            flex-direction: column;
-            overflow: hidden; /* 내용이 둥근 모서리 밖으로 안 나가게 */
+            position: absolute; top: 15px; left: 15px; bottom: 15px; width: 360px;
+            background: rgba(255, 255, 255, 0.95); z-index: 20; box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;
         }
-
-        /* 검색창 */
         .search-box { padding: 15px; border-bottom: 1px solid #eee; background: transparent; }
         .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        /* 필터 */
         .filter-box { padding: 10px 15px; display: flex; gap: 8px; border-bottom: 1px solid #eee; }
         .filter-btn { flex: 1; padding: 8px 0; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; color: #555; transition: all 0.2s; }
         .filter-btn:hover { background: #f1f1f1; }
         .filter-btn.active { background: #333; color: white; border-color: #333; }
         
-        /* 목록 */
         .park-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
-        /* 스크롤바 예쁘게 */
         .park-list::-webkit-scrollbar { width: 6px; }
         .park-list::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 3px; }
         
@@ -54,18 +40,20 @@
         .no-result { padding: 40px 20px; text-align: center; color: #999; font-size: 14px; }
         .recommend-msg { padding: 15px; background: #e8f5e9; color: #2e7d32; font-size: 13px; font-weight: bold; border-bottom: 1px solid #c8e6c9; line-height: 1.4; }
         
-        /* 배지 */
         .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; display: inline-block; margin-left: 6px; vertical-align: middle;}
         .hard { background-color: #ff4757; } .medium { background-color: #ffa502; } .easy { background-color: #2ed573; }   
 
-        /* 정보창 디자인 (모서리 더 둥글게) */
+        /* 정보창 디자인 */
         .wrap { padding: 0; width: 280px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
         .info-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-bottom: 1px solid #eee; height: 35px; }
         .info-title { font-weight: bold; font-size: 15px; color: #333; margin: 0; }
         .slider-container { position: relative; width: 100%; height: 160px; background: #fff; }
+        
+        /* 3D 뷰어 */
+        model-viewer { width: 100%; height: 100%; background-color: #eee; }
+
         .slide-item { width: 100%; height: 100%; display: none; }
         .slide-item.active { display: block; }
-        
         .text-slide { padding: 15px 20px; box-sizing: border-box; background-color: #fff; color: #333; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; display: none; }
         .text-slide.active { display: flex; }
         .info-row { font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
@@ -81,17 +69,11 @@
         .prev-btn { left: 10px; } .next-btn { right: 10px; }
         .page-indicator { position: absolute; bottom: 8px; right: 10px; font-size: 10px; color: #666; background: rgba(255,255,255,0.9); padding: 3px 6px; border-radius: 10px; z-index: 20; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
 
-        /* 모바일 최적화 (하단 시트 스타일) */
+        /* 모바일 최적화 */
         @media screen and (max-width: 768px) {
             .container { flex-direction: column; }
-            .sidebar { 
-                top: auto; /* 위쪽 여백 해제 */
-                left: 10px; right: 10px; bottom: 10px; /* 좌우아래 10px 여백 */
-                width: auto; /* 너비 자동 */
-                height: 40%; /* 화면의 40%만 차지 */
-                border-radius: 15px; /* 둥글게 */
-            }
-            #map { height: 100%; } /* 지도는 전체 */
+            .sidebar { top: auto; left: 10px; right: 10px; bottom: 10px; width: auto; height: 40%; border-radius: 15px; }
+            #map { height: 100%; }
         }
     </style>
 </head>
@@ -119,31 +101,50 @@
 
     <script>
         var mapContainer = document.getElementById('map'), 
-            mapOption = { center: new kakao.maps.LatLng(37.567475, 127.004690), level: 8 };
+            mapOption = { center: new kakao.maps.LatLng(37.5986261, 127.0922478), level: 8 }; 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
         var ps = new kakao.maps.services.Places();
 
-        // 줌 컨트롤 추가 (지도 오른쪽 줌 버튼)
+        // 줌 컨트롤 추가
         var zoomControl = new kakao.maps.ZoomControl();
         map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 
-        var imageSrc = "https://maps.google.com/mapfiles/ms/icons/red-dot.png"; 
-        var imageSize = new kakao.maps.Size(32, 32); 
-        var imageOption = {offset: new kakao.maps.Point(16, 32)}; 
-        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+        // ▼▼▼ 2. 마커 이미지 설정 (내 컴퓨터 파일 사용) ▼▼▼
+        // 파일명이 'markerRed.png', 'markerBlue.png' 와 정확히 같아야 합니다.
+        var markerRedUrl = "./park.png"; 
+        var markerBlueUrl = "./street.png";
+        
+        // 마커 크기 설정 (원본 이미지가 크면 여기서 숫자를 줄이세요! 예: 32, 32)
+        var imageSize = new kakao.maps.Size(30, 30); 
+        var imageOption = {offset: new kakao.maps.Point(17, 35)}; 
 
+        // 마커 객체 생성
+        var redMarkerImg = new kakao.maps.MarkerImage(markerRedUrl, imageSize, imageOption);
+        var blueMarkerImg = new kakao.maps.MarkerImage(markerBlueUrl, imageSize, imageOption);
+
+        // 데이터 리스트
         var skateParks = [
-            { title: "훈련원 공원", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08:00-20:00", desc: "스트릿 성지, 대리석 타일 바닥", images: ["./culti1.jpg"] },
-            { title: "살곶이 스케이트파크", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08:00-23:00", desc: "23시 소등, 평지 공간 협소", images: ["./salgoji1.jpg"] },
-            { title: "서울숲 스케이트파크", addr: "성동구 성수동", lat: 37.5457255, lng: 127.0422293, level: "초/중급", levelClass: "easy", hours: "08:00-22:00", desc: "숲속 감성, 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
-            { title: "이촌 한강공원", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘, 바닥 부드러움", images: ["./ichon1.jpg"] },
-            { title: "광나루 스케이트파크", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 매끄러운 바닥", images: ["./gwangnaru1.jpg"] },
-            { title: "노해 스케이트파크", addr: "노원구 상계동", lat: 37.6484306, lng: 127.0704715, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격, 보울 보유", images: ["./nohae1.png","./nohae2.jpg"] },
-            { title: "뚝섬 한강공원", addr: "광진구 자양동", lat: 37.529235, lng: 127.069562, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
-            { title: "난지 익스트림장", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유", images: ["./nanji1.jpg"] },
-            { title: "보라매공원", addr: "동작구 신대방동", lat: 37.493922, lng: 126.920977, level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스, 헬멧 필수", images: ["./boramae1.jpg"] },
-            { title: "디디미 스케이트파크", addr: "동대문구 답십리", lat: 37.5784979, lng: 127.0347585, level: "중급", levelClass: "medium", hours: "09:00-23:00", desc: "정릉천변, 야간 조명 좋음", images: ["./dedimi1.jpg"] },
-            { title: "익스트림 은평", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00", desc: "은평구 최초 전용 파크", images: ["./eunpyeong1.jpg"] }
+            { 
+                title: "망우역 광장 (스팟)", 
+                type: "street", // 🔵 파란 핀 적용
+                addr: "중랑구 망우동", 
+                lat: 37.5986261, lng: 127.0922478, 
+                level: "중급", levelClass: "medium", 
+                hours: "24시간", 
+                desc: "역 앞 대리석 광장. 바닥이 매끄러움.", 
+                images: ["./mangu1.jpg"] 
+            },
+            { title: "훈련원 공원", type: "park", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08:00-20:00", desc: "스트릿 성지, 대리석 타일 바닥", images: ["./culti1.jpg"] },
+            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08:00-23:00", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
+            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5457255, lng: 127.0422293, level: "초/중급", levelClass: "easy", hours: "08:00-22:00", desc: "숲속 감성. 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
+            { title: "이촌 한강공원", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
+            { title: "광나루 스케이트파크", type: "park", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwangnaru1.jpg"] },
+            { title: "노해 스케이트파크", type: "park", addr: "노원구 상계동", lat: 37.6484306, lng: 127.0704715, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.png","./nohae2.jpg"] },
+            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.529235, lng: 127.069562, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
+            { title: "난지 익스트림장", type: "park", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유.", images: ["./nanji1.jpg"] },
+            { title: "보라매공원", type: "park", addr: "동작구 신대방동", lat: 37.4908333, lng:126.9218189 , level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png","./boramae2.png","./boramae3.png","./boramae4.png"] },
+            { title: "디디미 스케이트파크", type: "park", addr: "동대문구 답십리", lat: 37.5784979, lng: 127.0347585, level: "중급", levelClass: "medium", hours: "09:00-23:00", desc: "정릉천변 다리밑에 위치, 우천 시 범람 주의", images: ["./dedimi1.jpg"] },
+            { title: "익스트림 은평", type: "park", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00 (월 휴무)", desc: "은평구 최초 전용 파크. 인공암벽장 옆.", images: ["./eunpyeong1.jpg"] }
         ];
 
         var markers = [];
@@ -189,8 +190,11 @@
             infowindows = [];
 
             data.forEach(function(data, index) {
+                // 🔴 type이 'street'면 파란 핀, 아니면 빨간 핀 사용
+                var currentImage = (data.type === 'street') ? blueMarkerImg : redMarkerImg;
+
                 var marker = new kakao.maps.Marker({
-                    map: map, position: new kakao.maps.LatLng(data.lat, data.lng), image: markerImage
+                    map: map, position: new kakao.maps.LatLng(data.lat, data.lng), image: currentImage
                 });
                 markers.push(marker);
 
@@ -201,22 +205,42 @@
                         <a href="https://map.kakao.com/link/to/${data.title},${data.lat},${data.lng}" target="_blank" class="btn-find-way">🚀 카카오맵 길찾기</a>
                     </div>
                 `;
+
+                var hasModel = false;
+                if(data.model3d) {
+                    slidesHtml += `
+                        <div class="slide-item">
+                            <model-viewer src="${data.model3d}" auto-rotate camera-controls shadow-intensity="1" alt="3D Model"></model-viewer>
+                            <div style="position:absolute; bottom:5px; left:0; width:100%; text-align:center; font-size:11px; color:#555; pointer-events:none;">👆 마우스로 돌려보세요</div>
+                        </div>
+                    `;
+                    hasModel = true;
+                }
+
                 if(data.images && data.images.length > 0) {
                     for(var j=0; j<data.images.length; j++) {
                         slidesHtml += `<img src="${data.images[j]}" class="slide-item img-slide">`;
                     }
                 }
-                var totalPages = 1 + (data.images ? data.images.length : 0);
+                
+                var totalPages = 1 + (hasModel ? 1 : 0) + (data.images ? data.images.length : 0);
                 var content = `<div class="wrap"><div class="info-header"><span class="info-title">${data.title}</span><span class="badge ${data.levelClass}">${data.level}</span></div><div class="slider-container"><button class="prev-btn" onclick="moveSlide(this, -1)">❮</button><div class="slides">${slidesHtml}</div><button class="next-btn" onclick="moveSlide(this, 1)">❯</button><div class="page-indicator">1 / ${totalPages}</div></div></div>`;
                 var infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
                 infowindows.push(infowindow);
 
-                kakao.maps.event.addListener(marker, 'click', function() { closeAllInfowindows(); infowindow.open(map, marker); });
+                // 클릭 시 확대 및 이동
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    closeAllInfowindows();
+                    map.setLevel(4, {animate: true});
+                    map.panTo(marker.getPosition());
+                    infowindow.open(map, marker);
+                });
             });
         }
 
         function moveToPark(lat, lng) {
             var moveLatLon = new kakao.maps.LatLng(lat, lng);
+            map.setLevel(4, {animate: true});
             map.panTo(moveLatLon);
             closeAllInfowindows();
             var targetMarker = markers.find(function(m) { return m.getPosition().getLat().toFixed(6) == lat.toString() && m.getPosition().getLng().toFixed(6) == lng.toString(); });
@@ -238,56 +262,34 @@
             renderList(filtered);
         });
 
-        // 기존 searchLocation 함수를 이걸로 덮어씌우세요!
+        function searchLocation() {
+            var keyword = searchInput.value.trim();
+            if (!keyword) return;
+            var textMatch = skateParks.filter(item => item.title.includes(keyword) || item.addr.includes(keyword));
+            if(textMatch.length > 0) { renderList(textMatch); return; }
 
-function searchLocation() {
-    var keyword = searchInput.value.trim();
-    if (!keyword) return;
-
-    // 1. 텍스트로 먼저 찾아봄 (기존 목록에 있는지)
-    var textMatch = skateParks.filter(item => item.title.includes(keyword) || item.addr.includes(keyword));
-    if(textMatch.length > 0) {
-        // 목록에 있으면 바로 필터링해서 보여줌
-        renderList(textMatch); 
-        return;
-    }
-
-    // 2. 목록에 없으면 '장소 검색' 실행
-    ps.keywordSearch(keyword, function(data, status, pagination) {
-        if (status === kakao.maps.services.Status.OK) {
-            var centerLat = data[0].y;
-            var centerLng = data[0].x;
-            
-            // 🔴 수정된 부분: centerName(카카오가 찾은 이름) 대신 keyword(내 검색어) 사용!
-            // var centerName = data[0].place_name; (이거 안 씀)
-
-            var sortedParks = skateParks.map(function(park) {
-                var dist = getDistanceFromLatLonInKm(centerLat, centerLng, park.lat, park.lng);
-                return { ...park, distance: dist.toFixed(1) }; 
-            }).sort(function(a, b) { return a.distance - b.distance; });
-
-            var nearest = [sortedParks[0]]; 
-            var moveLatLon = new kakao.maps.LatLng(centerLat, centerLng);
-            map.panTo(moveLatLon);
-            
-            // 🔴 메시지에 'keyword'(검색어)를 넣어서 보여줌
-            renderList(nearest, `📢 '${keyword}' 주변엔 없네요.<br>대신 가장 가까운 곳을 찾았어요!`);
-            
-        } else {
-            var listEl = document.getElementById('parkList');
-            listEl.innerHTML = '<li class="no-result">검색 결과를 찾을 수 없습니다 😢</li>';
+            ps.keywordSearch(keyword, function(data, status, pagination) {
+                if (status === kakao.maps.services.Status.OK) {
+                    var centerLat = data[0].y;
+                    var centerLng = data[0].x;
+                    var sortedParks = skateParks.map(function(park) {
+                        var dist = getDistanceFromLatLonInKm(centerLat, centerLng, park.lat, park.lng);
+                        return { ...park, distance: dist.toFixed(1) }; 
+                    }).sort(function(a, b) { return a.distance - b.distance; });
+                    var nearest = [sortedParks[0]]; 
+                    var moveLatLon = new kakao.maps.LatLng(centerLat, centerLng);
+                    map.panTo(moveLatLon);
+                    renderList(nearest, `📢 '${keyword}' 주변엔 없네요.<br>대신 가장 가까운 곳을 찾았어요!`);
+                } else {
+                    document.getElementById('parkList').innerHTML = '<li class="no-result">검색 결과를 찾을 수 없습니다 😢</li>';
+                }
+            });
         }
-    });
-}
 
         function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
-            var R = 6371; 
-            var dLat = deg2rad(lat2-lat1);  
-            var dLon = deg2rad(lon2-lon1); 
+            var R = 6371; var dLat = deg2rad(lat2-lat1); var dLon = deg2rad(lon2-lon1); 
             var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-            var d = R * c; 
-            return d;
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; 
         }
         function deg2rad(deg) { return deg * (Math.PI/180); }
 
@@ -296,12 +298,8 @@ function searchLocation() {
             btns.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('recommendMsg').style.display = 'none';
-
             if(type === 'all') { renderList(skateParks); } 
-            else {
-                var filtered = skateParks.filter(function(item) { return item.levelClass === type; });
-                renderList(filtered);
-            }
+            else { renderList(skateParks.filter(function(item) { return item.levelClass === type; })); }
         }
 
         window.moveSlide = function(btn, direction) {
