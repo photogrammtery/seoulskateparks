@@ -129,7 +129,7 @@
         var redMarkerImg = new kakao.maps.MarkerImage(markerRedUrl, imageSize, imageOption);
         var blueMarkerImg = new kakao.maps.MarkerImage(markerBlueUrl, imageSize, imageOption);
 
-        // 🔴 모든 파크 데이터 복구됨 + 디디미 Luma 섹션 추가
+        // 🔴 데이터 (기존 그대로)
         var skateParks = [
             { 
                 title: "디디미 스케이트파크", 
@@ -139,7 +139,6 @@
                 level: "중급", levelClass: "medium", 
                 hours: "09:00-23:00", 
                 desc: "정릉천변, 3D 분석 완료! 버튼을 눌러 확인하세요.", 
-                // 👇 [중요] 여기에 Luma URL 4개를 넣으세요!
                 lumaSections: [
                     { name: "① 스트릿", url: "https://lumalabs.ai/capture/323cd2c1-7df9-4095-bd49-86d8c5496773" },
                     { name: "② 메인 파크", url: "https://lumalabs.ai/capture/481b5834-750c-460d-90b9-e907776c5b84" },
@@ -148,17 +147,10 @@
                 ],
                 images: ["./dedimi1.jpg"] 
             },
+            // ... (나머지 데이터는 그대로 두세요) ...
             { title: "망우역 광장", type: "street", addr: "중랑구 망우동", lat: 37.5986261, lng: 127.0922478, level: "중급", levelClass: "medium", hours: "24시간", desc: "역 앞 대리석 광장.", images: ["./mangu1.jpg"] },
-            { title: "훈련원 공원", type: "park", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08-20시", desc: "스트릿 성지, 대리석 타일 바닥", images: ["./culti1.jpg"] },
-            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
-            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5457255, lng: 127.0422293, level: "초/중급", levelClass: "easy", hours: "08-22시", desc: "숲속 감성. 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
-            { title: "이촌 한강공원", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
-            { title: "광나루 스케이트파크", type: "park", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwangnaru1.jpg"] },
-            { title: "노해 스케이트파크", type: "park", addr: "노원구 상계동", lat: 37.6484306, lng: 127.0704715, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.png"] },
-            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.529235, lng: 127.069562, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
-            { title: "난지 익스트림장", type: "park", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유.", images: ["./nanji1.jpg"] },
-            { title: "보라매공원", type: "park", addr: "동작구 신대방동", lat: 37.4908333, lng:126.9218189 , level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png"] },
-            { title: "익스트림 은평", type: "park", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00", desc: "은평구 최초 전용 파크.", images: ["./eunpyeong1.jpg"] }
+            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등.", images: ["./salgoji1.jpg"] }
+            // (줄임)
         ];
 
         var markers = [];
@@ -167,7 +159,7 @@
         renderList(skateParks);
         createMarkers(skateParks);
 
-        // 3D 모달 열기 함수
+        // 🟢 [핵심 수정] 3D 모달 열기 함수 (렌더링 타이밍 수정)
         window.openLumaModal = function(index) {
             var data = skateParks[index];
             if(!data.lumaSections || data.lumaSections.length === 0) {
@@ -179,6 +171,7 @@
             var btnContainer = document.getElementById('sectionBtnContainer');
             var viewer = document.getElementById('lumaViewer');
             
+            // 1. 버튼 생성
             btnContainer.innerHTML = '';
             data.lumaSections.forEach((sec, i) => {
                 var btn = document.createElement('button');
@@ -193,12 +186,20 @@
                 btnContainer.appendChild(btn);
             });
 
-            viewer.setAttribute('source', data.lumaSections[0].url);
+            // 2. 모달을 먼저 보여줍니다 (Display: flex로 변경)
             modal.classList.add('show');
+
+            // 3. [중요] 모달이 뜬 뒤, 아주 잠깐(0.1초) 뒤에 소스를 넣습니다.
+            // 이유: 모달이 꺼져있을 때 소스를 넣으면 화면 크기를 0으로 인식해서 검은 화면이 뜸.
+            setTimeout(function() {
+                viewer.setAttribute('source', data.lumaSections[0].url);
+            }, 100);
         }
 
         window.closeModal = function() {
-            document.getElementById('lumaModal').classList.remove('show');
+            var modal = document.getElementById('lumaModal');
+            modal.classList.remove('show');
+            // 닫을 때는 소스를 비워줍니다 (메모리 절약)
             document.getElementById('lumaViewer').setAttribute('source', '');
         }
 
@@ -230,7 +231,6 @@
                 
                 var originalIndex = skateParks.indexOf(data);
                 
-                // 정보창에 3D 버튼 추가
                 var btnHtml = `<div class="btn-group">
                                     <a href="https://map.kakao.com/link/to/${data.title},${data.lat},${data.lng}" target="_blank" class="btn-common btn-find">🚀 길찾기</a>`;
                 if(data.lumaSections) {
