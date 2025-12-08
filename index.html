@@ -3,88 +3,77 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>서울시 스케이트보드 파크 지도</title>
+    <title>서울시 스케이트보드 파크 지도 (Complete)</title>
     
-    <script type="module" src="https://unpkg.com/@lumaai/luma-web"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
-
     <style>
-        /* 기본 스타일 */
+        /* 1. 기본 스타일 */
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Malgun Gothic', sans-serif;}
         .container { position: relative; width: 100%; height: 100%; }
         #map { width: 100%; height: 100%; }
 
-        /* 사이드바 */
+        /* 2. 사이드바 (리스트) */
         .sidebar { position: absolute; top: 15px; left: 15px; bottom: 15px; width: 360px; background: rgba(255, 255, 255, 0.95); z-index: 20; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .search-box { padding: 15px; border-bottom: 1px solid #eee; background: transparent; }
+        .search-box { padding: 15px; border-bottom: 1px solid #eee; }
         .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-        .filter-box { padding: 10px 15px; display: flex; gap: 8px; border-bottom: 1px solid #eee; }
-        .filter-btn { flex: 1; padding: 8px 0; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; color: #555; transition: all 0.2s; }
-        .filter-btn:hover { background: #f1f1f1; }
-        .filter-btn.active { background: #333; color: white; border-color: #333; }
         .park-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
         .park-item { padding: 18px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
         .park-item:hover { background: #f1f8ff; }
-        .item-title { font-weight: bold; font-size: 15px; margin-bottom: 6px; display: block; color: #222; }
-        .item-desc { font-size: 13px; color: #777; display: block; line-height: 1.4; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; display: inline-block; margin-left: 6px; vertical-align: middle;}
+        .item-title { font-weight: bold; font-size: 15px; display: block; color: #222; margin-bottom: 5px;}
+        .item-desc { font-size: 13px; color: #777; line-height: 1.4; }
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; margin-left: 5px; vertical-align: middle;}
         .hard { background-color: #ff4757; } .medium { background-color: #ffa502; } .easy { background-color: #2ed573; }
-        
-        /* 정보창 디자인 */
-        .wrap { padding: 0; width: 280px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
-        .info-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-bottom: 1px solid #eee; height: 35px; }
-        .info-title { font-weight: bold; font-size: 15px; color: #333; margin: 0; }
-        .slider-container { position: relative; width: 100%; height: 160px; background: #fff; }
-        .text-slide { padding: 15px 20px; box-sizing: border-box; background-color: #fff; color: #333; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; height: 100%; }
-        .info-row { font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
+
+        /* 3. 정보창 (마커 클릭 시) */
+        .wrap { width: 280px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
+        .info-header { padding: 12px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center;}
+        .text-slide { padding: 15px; font-size: 13px; line-height: 1.6; }
+        .info-row { margin-bottom: 5px; }
+        .info-label { font-weight: bold; margin-right: 5px; }
         
         /* 버튼 그룹 */
         .btn-group { display: flex; gap: 5px; margin-top: 10px; }
-        .btn-common { flex: 1; padding: 10px 0; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-common { flex: 1; padding: 10px 0; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; text-decoration: none; text-align: center; display: inline-block;}
         .btn-find { background-color: #FEE500; color: #000; }
-        /* 🔵 Luma 3D 버튼 스타일 */
         .btn-3d { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
-        .btn-3d:hover { opacity: 0.9; }
 
-        /* 🔴 Luma 모달창 (전체화면) */
+        /* 4. 🔴 3D 시네마 모달 (Iframe 방식 - 안정성 최우선) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95); z-index: 9999; display: none; 
             flex-direction: column; justify-content: center; align-items: center;
         }
         .modal-overlay.show { display: flex; }
-        
         .modal-content { width: 100%; height: 100%; position: relative; }
 
         /* 닫기 버튼 */
         .close-btn {
             position: absolute; top: 20px; right: 20px; z-index: 100;
-            color: white; font-size: 30px; background: rgba(0,0,0,0.5); 
-            border: 1px solid rgba(255,255,255,0.3); border-radius: 50%;
-            width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 30px; cursor: pointer; background: rgba(0,0,0,0.5);
+            width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* 하단 섹션 선택 버튼들 */
+        /* 아이프레임 (화면 꽉 차게) */
+        iframe#lumaFrame { width: 100%; height: 100%; border: none; background: #000; }
+
+        /* 하단 섹션 버튼 */
         .section-buttons {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px; z-index: 100; background: rgba(0,0,0,0.6);
-            padding: 8px; border-radius: 30px; backdrop-filter: blur(5px); flex-wrap: wrap; justify-content: center; width: 90%; max-width: 600px;
+            padding: 8px; border-radius: 30px; flex-wrap: wrap; justify-content: center; width: 90%; max-width: 600px;
         }
         .sec-btn {
-            padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.1); color: white; border-radius: 20px;
-            cursor: pointer; font-size: 13px; transition: all 0.3s; white-space: nowrap;
+            padding: 8px 16px; background: rgba(255,255,255,0.1); color: white;
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; cursor: pointer; font-size: 13px;
         }
-        .sec-btn:hover { background: rgba(255,255,255,0.3); }
         .sec-btn.active { background: #6c5ce7; border-color: #6c5ce7; font-weight: bold; box-shadow: 0 0 10px #6c5ce7; }
 
-        /* Luma 뷰어 */
-        luma-splat { width: 100%; height: 100%; }
-
+        /* 모바일 반응형 */
         @media screen and (max-width: 768px) {
             .container { flex-direction: column; }
-            .sidebar { top: auto; left: 10px; right: 10px; bottom: 10px; width: auto; height: 35%; border-radius: 15px; }
-            #map { height: 100%; }
+            .sidebar { position:static; width: 100%; height: 40%; border-radius: 0; }
+            #map { height: 60%; }
+            .section-buttons { bottom: 15px; width: 95%; }
         }
     </style>
 </head>
@@ -93,13 +82,7 @@
     <div class="container">
         <div id="map"></div>
         <div class="sidebar">
-            <div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="지역명(강남, 홍대) 입력 후 엔터!"></div>
-            <div class="filter-box">
-                <button class="filter-btn active" onclick="filterList('all')">전체</button>
-                <button class="filter-btn" onclick="filterList('easy')">초급</button>
-                <button class="filter-btn" onclick="filterList('medium')">중급</button>
-                <button class="filter-btn" onclick="filterList('hard')">상급</button>
-            </div>
+            <div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="지역명 검색 (예: 뚝섬, 은평)"></div>
             <ul class="park-list" id="parkList"></ul>
         </div>
     </div>
@@ -107,9 +90,7 @@
     <div id="lumaModal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">✕</button>
-            
-            <luma-splat id="lumaViewer" source=""></luma-splat>
-
+            <iframe id="lumaFrame" src="" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
             <div id="sectionBtnContainer" class="section-buttons"></div>
         </div>
     </div>
@@ -120,37 +101,43 @@
         var mapContainer = document.getElementById('map'), 
             mapOption = { center: new kakao.maps.LatLng(37.5986261, 127.0922478), level: 8 }; 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
-        var ps = new kakao.maps.services.Places();
         
-        var markerRedUrl = "./park.png"; 
-        var markerBlueUrl = "./street.png";
+        // 마커 이미지 설정 (스트릿=파랑, 파크=빨강)
         var imageSize = new kakao.maps.Size(30, 30); 
         var imageOption = {offset: new kakao.maps.Point(17, 35)}; 
-        var redMarkerImg = new kakao.maps.MarkerImage(markerRedUrl, imageSize, imageOption);
-        var blueMarkerImg = new kakao.maps.MarkerImage(markerBlueUrl, imageSize, imageOption);
+        var redMarkerImg = new kakao.maps.MarkerImage("./park.png", imageSize, imageOption);
+        var blueMarkerImg = new kakao.maps.MarkerImage("./street.png", imageSize, imageOption);
 
-        // 🔴 데이터 (기존 그대로)
+        // 🔴 전체 파크 데이터
         var skateParks = [
+            // 1. 디디미 (3D 기능 보유)
             { 
                 title: "디디미 스케이트파크", 
-                type: "park", 
-                addr: "동대문구 답십리", 
+                type: "park", addr: "동대문구 답십리", 
                 lat: 37.5784979, lng: 127.0347585, 
                 level: "중급", levelClass: "medium", 
                 hours: "09:00-23:00", 
                 desc: "정릉천변, 3D 분석 완료! 버튼을 눌러 확인하세요.", 
+                // 👇 [중요] 여기에 님의 capture 주소를 넣으세요.
                 lumaSections: [
                     { name: "① 스트릿", url: "https://lumalabs.ai/capture/323cd2c1-7df9-4095-bd49-86d8c5496773" },
-                    { name: "② 메인 파크", url: "https://lumalabs.ai/capture/481b5834-750c-460d-90b9-e907776c5b84" },
-                    { name: "③ 쿼터 파이프", url: "https://lumalabs.ai/capture/556d0432-15a6-4f21-8526-93125a5e27cf" },
-                    { name: "④ 계단 스팟", url: "https://lumalabs.ai/capture/481b5834-750c-460d-90b9-e907776c5b84" }
-                ],
+                    { name: "② 쿼터 파이프", url: "https://lumalabs.ai/capture/556d0432-15a6-4f21-8526-93125a5e27cf" },
+                    { name: "③ 메인 파크", url: "https://lumalabs.ai/capture/481b5834-750c-460d-90b9-e907776c5b84" }
+                     ],
                 images: ["./dedimi1.jpg"] 
             },
-            // ... (나머지 데이터는 그대로 두세요) ...
+            // 2. 나머지 파크 데이터
             { title: "망우역 광장", type: "street", addr: "중랑구 망우동", lat: 37.5986261, lng: 127.0922478, level: "중급", levelClass: "medium", hours: "24시간", desc: "역 앞 대리석 광장.", images: ["./mangu1.jpg"] },
-            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등.", images: ["./salgoji1.jpg"] }
-            // (줄임)
+            { title: "훈련원 공원", type: "park", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08-20시", desc: "스트릿 성지, 대리석 타일 바닥", images: ["./culti1.jpg"] },
+            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
+            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5457255, lng: 127.0422293, level: "초/중급", levelClass: "easy", hours: "08-22시", desc: "숲속 감성. 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
+            { title: "이촌 한강공원", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
+            { title: "광나루 스케이트파크", type: "park", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwangnaru1.jpg"] },
+            { title: "노해 스케이트파크", type: "park", addr: "노원구 상계동", lat: 37.6484306, lng: 127.0704715, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.png"] },
+            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.529235, lng: 127.069562, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
+            { title: "난지 익스트림장", type: "park", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유.", images: ["./nanji1.jpg"] },
+            { title: "보라매공원", type: "park", addr: "동작구 신대방동", lat: 37.4908333, lng:126.9218189 , level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png"] },
+            { title: "익스트림 은평", type: "park", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00", desc: "은평구 최초 전용 파크.", images: ["./eunpyeong1.jpg"] }
         ];
 
         var markers = [];
@@ -159,19 +146,15 @@
         renderList(skateParks);
         createMarkers(skateParks);
 
-        // 🟢 [핵심 수정] 3D 모달 열기 함수 (렌더링 타이밍 수정)
+        // 🟢 3D 모달 열기 함수 (URL 안전 변환)
         window.openLumaModal = function(index) {
             var data = skateParks[index];
-            if(!data.lumaSections || data.lumaSections.length === 0) {
-                alert("아직 3D 데이터가 준비되지 않았습니다!");
-                return;
-            }
+            if(!data.lumaSections) { alert("3D 데이터가 없습니다!"); return; }
 
             var modal = document.getElementById('lumaModal');
             var btnContainer = document.getElementById('sectionBtnContainer');
-            var viewer = document.getElementById('lumaViewer');
+            var frame = document.getElementById('lumaFrame');
             
-            // 1. 버튼 생성
             btnContainer.innerHTML = '';
             data.lumaSections.forEach((sec, i) => {
                 var btn = document.createElement('button');
@@ -179,98 +162,83 @@
                 if(i === 0) btn.classList.add('active'); 
                 btn.innerText = sec.name;
                 btn.onclick = function() {
-                    viewer.setAttribute('source', sec.url);
+                    loadLumaSafe(frame, sec.url);
                     document.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                 };
                 btnContainer.appendChild(btn);
             });
 
-            // 2. 모달을 먼저 보여줍니다 (Display: flex로 변경)
+            loadLumaSafe(frame, data.lumaSections[0].url);
             modal.classList.add('show');
-
-            // 3. [중요] 모달이 뜬 뒤, 아주 잠깐(0.1초) 뒤에 소스를 넣습니다.
-            // 이유: 모달이 꺼져있을 때 소스를 넣으면 화면 크기를 0으로 인식해서 검은 화면이 뜸.
-            setTimeout(function() {
-                viewer.setAttribute('source', data.lumaSections[0].url);
-            }, 100);
         }
 
         window.closeModal = function() {
-            var modal = document.getElementById('lumaModal');
-            modal.classList.remove('show');
-            // 닫을 때는 소스를 비워줍니다 (메모리 절약)
-            document.getElementById('lumaViewer').setAttribute('source', '');
+            document.getElementById('lumaModal').classList.remove('show');
+            document.getElementById('lumaFrame').src = '';
+        }
+
+        // 🟢 안전한 로딩 함수 (Iframe용 주소 자동 변환)
+        function loadLumaSafe(frame, originalUrl) {
+            var embedUrl = originalUrl.replace("capture", "embed");
+            // 화질 옵션(sparkles) 강제 적용
+            var separator = embedUrl.includes("?") ? "&" : "?";
+            frame.src = embedUrl + separator + "mode=sparkles&background=%23000000&autoLoad=true";
         }
 
         function renderList(data) {
             var listEl = document.getElementById('parkList');
             listEl.innerHTML = ''; 
-            if (data.length === 0) { listEl.innerHTML = '<li class="no-result">결과가 없네요 😢</li>'; return; }
-
             data.forEach(function(item) {
                 var li = document.createElement('li');
                 li.className = 'park-item';
-                var badge3D = (item.lumaSections) ? '<span style="color:#6c5ce7; font-weight:bold; font-size:11px;"> [🧊3D]</span>' : '';
-                li.innerHTML = `<span class="item-title">${item.title} <span class="badge ${item.levelClass}">${item.level}</span>${badge3D}</span><span class="item-desc">${item.addr} | ${item.desc}</span>`;
-                li.onclick = function() { moveToPark(item.lat, item.lng); };
+                var badge3D = (item.lumaSections) ? '<span style="color:#6c5ce7; font-weight:bold;"> [🧊3D]</span>' : '';
+                li.innerHTML = `<span class="item-title">${item.title} <span class="badge ${item.levelClass}">${item.level}</span>${badge3D}</span><span class="item-desc">${item.addr}</span>`;
+                li.onclick = function() { 
+                    var moveLatLon = new kakao.maps.LatLng(item.lat, item.lng);
+                    map.panTo(moveLatLon);
+                };
                 listEl.appendChild(li);
             });
         }
 
         function createMarkers(data) {
-            for (var i = 0; i < markers.length; i++) { markers[i].setMap(null); }
-            markers = []; infowindows = [];
-
-            data.forEach(function(data) {
+            data.forEach(function(data, index) {
+                // 타입에 따라 마커 색상 변경
                 var currentImage = (data.type === 'street') ? blueMarkerImg : redMarkerImg;
                 var marker = new kakao.maps.Marker({
                     map: map, position: new kakao.maps.LatLng(data.lat, data.lng), image: currentImage
                 });
-                markers.push(marker);
-                
-                var originalIndex = skateParks.indexOf(data);
                 
                 var btnHtml = `<div class="btn-group">
-                                    <a href="https://map.kakao.com/link/to/${data.title},${data.lat},${data.lng}" target="_blank" class="btn-common btn-find">🚀 길찾기</a>`;
+                                <a href="https://map.kakao.com/link/to/${data.title},${data.lat},${data.lng}" target="_blank" class="btn-common btn-find">🚀 길찾기</a>`;
                 if(data.lumaSections) {
-                    btnHtml += `<button class="btn-common btn-3d" onclick="openLumaModal(${originalIndex})">🧊 3D 시네마</button>`;
+                    btnHtml += `<button class="btn-common btn-3d" onclick="openLumaModal(${index})">🧊 3D 시네마</button>`;
                 }
                 btnHtml += `</div>`;
 
-                var content = `<div class="wrap"><div class="info-header"><span class="info-title">${data.title}</span><span class="badge ${data.levelClass}">${data.level}</span></div><div class="slider-container"><div class="text-slide"><div class="info-row"><span class="info-label">⏰</span>${data.hours}</div><div class="info-row"><span class="info-label">📝</span>${data.desc}</div>${btnHtml}</div></div></div>`;
-
+                var content = `<div class="wrap"><div class="info-header"><span class="info-title">${data.title}</span><span class="badge ${data.levelClass}">${data.level}</span></div><div class="text-slide"><div class="info-row"><span class="info-label">⏰</span>${data.hours}</div><div class="info-row"><span class="info-label">📝</span>${data.desc}</div>${btnHtml}</div></div>`;
                 var infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
                 infowindows.push(infowindow);
 
                 kakao.maps.event.addListener(marker, 'click', function() {
-                    closeAllInfowindows();
-                    map.setLevel(4, {animate: true});
-                    map.panTo(marker.getPosition());
+                    for(var i=0; i<infowindows.length; i++) infowindows[i].close();
                     infowindow.open(map, marker);
                 });
             });
         }
-
-        function moveToPark(lat, lng) {
-            var moveLatLon = new kakao.maps.LatLng(lat, lng);
-            map.setLevel(4, {animate: true});
-            map.panTo(moveLatLon);
-            closeAllInfowindows();
-            var targetMarker = markers.find(function(m) { return m.getPosition().getLat().toFixed(6) == lat.toString() && m.getPosition().getLng().toFixed(6) == lng.toString(); });
-            if(targetMarker) { 
-                var realIndex = skateParks.findIndex(function(p) { return p.lat === lat && p.lng === lng; });
-                if(realIndex >= 0 && infowindows[realIndex]) infowindows[realIndex].open(map, targetMarker);
+        
+        // 검색 기능
+        var searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keyup', function(e) {
+            if(e.key === 'Enter') { 
+                var keyword = this.value.trim();
+                var filtered = skateParks.filter(function(item) {
+                    return item.title.includes(keyword) || item.addr.includes(keyword);
+                });
+                renderList(filtered);
             }
-        }
-        function closeAllInfowindows() { for(var i=0; i<infowindows.length; i++) { infowindows[i].close(); } }
-        function filterList(type) {
-            var btns = document.querySelectorAll('.filter-btn');
-            btns.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            if(type === 'all') { renderList(skateParks); } 
-            else { renderList(skateParks.filter(function(item) { return item.levelClass === type; })); }
-        }
+        });
     </script>
 </body>
 </html>
