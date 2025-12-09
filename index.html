@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>서울시 스케이트보드 파크 지도 (Final)</title>
     
     <style>
@@ -12,17 +12,15 @@
         #map { width: 100%; height: 100%; }
 
         /* 2. 사이드바 (리스트) */
-        .sidebar { position: absolute; top: 15px; left: 15px; bottom: 15px; width: 360px; background: rgba(255, 255, 255, 0.95); z-index: 20; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-        .search-box { padding: 15px; border-bottom: 1px solid #eee; }
-        .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; }
-        .park-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
-        .park-item { padding: 18px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s; }
-        .park-item:hover { background: #f1f8ff; }
-        .item-title { font-weight: bold; font-size: 15px; display: block; color: #222; margin-bottom: 5px;}
-        .item-desc { font-size: 13px; color: #777; line-height: 1.4; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; margin-left: 5px; vertical-align: middle;}
-        .hard { background-color: #ff4757; } .medium { background-color: #ffa502; } .easy { background-color: #2ed573; }
-          /*  모바일 전용 핸들 (데스크탑에선 숨김) */
+        .sidebar { 
+            position: absolute; top: 15px; left: 15px; bottom: 15px; width: 360px; 
+            background: rgba(255, 255, 255, 0.95); z-index: 20; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 12px; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 부드러운 애니메이션 */
+        }
+        
+        /* 📱 모바일 전용 핸들 (데스크탑에선 숨김) */
         .mobile-handle-area { display: none; width: 100%; padding: 10px 0; background: #fff; cursor: pointer; justify-content: center; align-items: center; border-bottom: 1px solid #f5f5f5; }
         .mobile-handle-bar { width: 40px; height: 5px; background: #e0e0e0; border-radius: 10px; }
 
@@ -37,35 +35,20 @@
         .hard { background-color: #ff4757; } .medium { background-color: #ffa502; } .easy { background-color: #2ed573; }
         .dist-badge { background-color: #535c68; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px; font-weight: normal; }
 
-        /* 거리 표시용 배지 */
-        .dist-badge { background-color: #535c68; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px; font-weight: normal; }
-
-        /* 3. 정보창 (커스텀 스타일) */
+        /* 3. 정보창 스타일 */
         .wrap { width: 280px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
         .info-header { padding: 12px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center;}
-        
-        /* 이미지 슬라이드 영역 */
         .info-img-box { position: relative; width: 100%; height: 160px; background: #eee; overflow: hidden; }
         .info-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* 슬라이드 화살표 */
         .slide-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; cursor: pointer; padding: 8px 12px; font-size: 14px; z-index: 10; border-radius: 4px; }
-        .nav-prev { left: 0; }
-        .nav-next { right: 0; }
-        .slide-nav:hover { background: rgba(0,0,0,0.8); }
-
-        /* 텍스트 영역 */
+        .nav-prev { left: 0; } .nav-next { right: 0; }
         .text-slide { padding: 10px 15px; font-size: 13px; line-height: 1.6; }
         .info-row { margin-bottom: 5px; }
-        
-        /* 디디미 파크용 분석 박스 */
         .analysis-box { background: #f1f8ff; padding: 10px; margin-top: 5px; border-radius: 6px; border-left: 4px solid #6c5ce7; }
         .analysis-title { font-weight: bold; display: block; margin-bottom: 4px; color: #333; }
         .analysis-data { font-size: 12px; color: #555; display: block; }
         .diff-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; color: #fff; font-size: 11px; margin-left: 5px; vertical-align: middle; }
         .diff-easy { background: #2ed573; } .diff-medium { background: #ffa502; } .diff-hard { background: #ff4757; }
-
-        /* 버튼 그룹 */
         .btn-group { display: flex; gap: 5px; margin-top: 10px; }
         .btn-common { flex: 1; padding: 10px 0; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; text-decoration: none; text-align: center; display: inline-block;}
         .btn-find { background-color: #FEE500; color: #000; }
@@ -81,10 +64,27 @@
         .sec-btn { padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; cursor: pointer; font-size: 13px; }
         .sec-btn.active { background: #6c5ce7; border-color: #6c5ce7; font-weight: bold; box-shadow: 0 0 10px #6c5ce7; }
 
+        /* 📱 모바일 반응형 (핵심 변경 구간) */
         @media screen and (max-width: 768px) {
             .container { flex-direction: column; }
-            .sidebar { position:static; width: 100%; height: 40%; border-radius: 0; }
-            #map { height: 60%; }
+            .sidebar { 
+                position: absolute; 
+                top: auto; bottom: 0; left: 0; 
+                width: 100%; height: 60%; /* 기본 높이 60% */
+                border-radius: 20px 20px 0 0; 
+                z-index: 1000;
+                transform: translateY(0); /* 열린 상태 */
+            }
+            #map { height: 100%; } /* 지도는 전체 */
+            
+            /* 핸들 보이기 */
+            .mobile-handle-area { display: flex; }
+            
+            /* 닫혔을 때 (검색창만 빼꼼 보이게) */
+            .sidebar.closed {
+                transform: translateY(calc(100% - 85px)); /* 핸들+검색창 높이만큼 남기고 내림 */
+            }
+            
             .section-buttons { bottom: 15px; width: 95%; }
         }
     </style>
@@ -93,8 +93,14 @@
 
     <div class="container">
         <div id="map"></div>
-        <div class="sidebar">
-            <div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="지역명 검색 (예: 강남역, 홍대)"></div>
+        <div class="sidebar" id="sidebar">
+            <div class="mobile-handle-area" onclick="toggleSidebar()">
+                <div class="mobile-handle-bar"></div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="지역명 검색 (예: 강남역, 홍대)">
+            </div>
             <ul class="park-list" id="parkList"></ul>
         </div>
     </div>
@@ -113,8 +119,6 @@
         var mapContainer = document.getElementById('map'), 
             mapOption = { center: new kakao.maps.LatLng(37.5986261, 127.0922478), level: 8 }; 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
-        
-        // 🚀 장소 검색 서비스 추가
         var ps = new kakao.maps.services.Places();
 
         var imageSize = new kakao.maps.Size(30, 30); 
@@ -122,7 +126,18 @@
         var redMarkerImg = new kakao.maps.MarkerImage("./park.png", imageSize, imageOption);
         var blueMarkerImg = new kakao.maps.MarkerImage("./street.png", imageSize, imageOption);
 
-        // 🔴 데이터 정의
+        // 🟢 사이드바 토글 기능 (모바일용)
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('closed');
+        }
+        
+        // 검색창 포커스 시 자동으로 펼치기
+        document.getElementById('searchInput').addEventListener('focus', function() {
+            document.getElementById('sidebar').classList.remove('closed');
+        });
+
+        //  🔴 데이터 정의
         var skateParks = [
             { 
                 title: "디디미 스케이트파크", type: "street", addr: "동대문구 답십리", 
@@ -153,6 +168,7 @@
             { title: "익스트림 은평", type: "park", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00", desc: "은평구 최초 전용 파크.", images: ["./eunpyeong1.jpg"] }
         ];
 
+
         var markers = [];
         var infowindows = [];
         var currentSlideIndices = {}; 
@@ -160,7 +176,7 @@
         renderList(skateParks);
         createMarkers(skateParks);
 
-        // 🟢 검색 기능
+        // 검색
         var searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('keyup', function(e) {
             if(e.key === 'Enter') { 
@@ -173,20 +189,19 @@
 
                 if(filtered.length > 0) {
                     renderList(filtered); 
+                    // 모바일이면 결과 나올 때 창 펼치기
+                    document.getElementById('sidebar').classList.remove('closed');
                 } else {
                     ps.keywordSearch(keyword, placesSearchCB);
                 }
             }
         });
 
-        // 🟢 장소 검색 콜백
         function placesSearchCB(data, status, pagination) {
             if (status === kakao.maps.services.Status.OK) {
                 var target = data[0]; 
                 var center = new kakao.maps.LatLng(target.y, target.x);
                 map.setCenter(center); 
-
-                // 검색된 위치 확대
                 map.setLevel(4, {animate: true});
 
                 var sortedParks = skateParks.map(function(park) {
@@ -198,14 +213,13 @@
                 });
 
                 renderList(sortedParks);
+                document.getElementById('sidebar').classList.remove('closed'); // 결과 보여주기 위해 펼침
                 alert(`'${target.place_name}' 주변 파크를 거리순으로 표시합니다.`);
-
             } else {
                 alert('검색 결과가 없으며, 근처 파크를 찾을 수 없습니다.');
             }
         }
 
-        // 거리 계산 함수
         function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
             var R = 6371; 
             var dLat = deg2rad(lat2-lat1);  
@@ -231,8 +245,12 @@
                 
                 li.onclick = function() { 
                     var moveLatLon = new kakao.maps.LatLng(item.lat, item.lng);
-                    map.setLevel(3, {animate: true}); // 리스트 클릭 시에도 확대
+                    map.setLevel(3, {animate: true}); 
                     map.panTo(moveLatLon);
+                    // 리스트 클릭 시 모바일 창 닫기 (지도를 보기 위해)
+                    if(window.innerWidth <= 768) {
+                        document.getElementById('sidebar').classList.add('closed');
+                    }
                 };
                 listEl.appendChild(li);
             });
@@ -250,13 +268,9 @@
                 var infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
                 infowindows.push(infowindow);
 
-                // 🟢 [추가된 기능] 마커 클릭 이벤트
                 kakao.maps.event.addListener(marker, 'click', function() {
-                    // 1. 기존 창 닫기
                     infowindows.forEach(iw => iw.close());
-                    // 2. 현재 창 열기
                     infowindow.open(map, marker);
-                    // 3. ✨ 확대 및 이동 (레벨 3 = 상세 확대)
                     map.setLevel(3, {animate: true});
                     map.panTo(marker.getPosition());
                 });
