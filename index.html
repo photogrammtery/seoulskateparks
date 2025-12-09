@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>서울시 스케이트보드 파크 지도 (Complete)</title>
+    <title>서울시 스케이트보드 파크 지도 (Final)</title>
     
     <style>
         /* 1. 기본 스타일 */
@@ -22,53 +22,50 @@
         .item-desc { font-size: 13px; color: #777; line-height: 1.4; }
         .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; margin-left: 5px; vertical-align: middle;}
         .hard { background-color: #ff4757; } .medium { background-color: #ffa502; } .easy { background-color: #2ed573; }
+        /* 거리 표시용 배지 */
+        .dist-badge { background-color: #535c68; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px; font-weight: normal; }
 
-        /* 3. 정보창 (마커 클릭 시) */
+        /* 3. 정보창 (커스텀 스타일) */
         .wrap { width: 280px; background: #fff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
         .info-header { padding: 12px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center;}
-        .text-slide { padding: 15px; font-size: 13px; line-height: 1.6; }
-        .info-row { margin-bottom: 5px; }
-        .info-label { font-weight: bold; margin-right: 5px; }
         
+        /* 이미지 슬라이드 영역 */
+        .info-img-box { position: relative; width: 100%; height: 160px; background: #eee; overflow: hidden; }
+        .info-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* 슬라이드 화살표 */
+        .slide-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; cursor: pointer; padding: 8px 12px; font-size: 14px; z-index: 10; border-radius: 4px; }
+        .nav-prev { left: 0; }
+        .nav-next { right: 0; }
+        .slide-nav:hover { background: rgba(0,0,0,0.8); }
+
+        /* 텍스트 영역 */
+        .text-slide { padding: 10px 15px; font-size: 13px; line-height: 1.6; }
+        .info-row { margin-bottom: 5px; }
+        
+        /* 디디미 파크용 분석 박스 */
+        .analysis-box { background: #f1f8ff; padding: 10px; margin-top: 5px; border-radius: 6px; border-left: 4px solid #6c5ce7; }
+        .analysis-title { font-weight: bold; display: block; margin-bottom: 4px; color: #333; }
+        .analysis-data { font-size: 12px; color: #555; display: block; }
+        .diff-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; color: #fff; font-size: 11px; margin-left: 5px; vertical-align: middle; }
+        .diff-easy { background: #2ed573; } .diff-medium { background: #ffa502; } .diff-hard { background: #ff4757; }
+
         /* 버튼 그룹 */
         .btn-group { display: flex; gap: 5px; margin-top: 10px; }
         .btn-common { flex: 1; padding: 10px 0; border-radius: 6px; font-size: 12px; font-weight: bold; border: none; cursor: pointer; text-decoration: none; text-align: center; display: inline-block;}
         .btn-find { background-color: #FEE500; color: #000; }
         .btn-3d { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
 
-        /* 4. 🔴 3D 시네마 모달 (Iframe 방식 - 안정성 최우선) */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95); z-index: 9999; display: none; 
-            flex-direction: column; justify-content: center; align-items: center;
-        }
+        /* 4. 3D 시네마 모달 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .modal-overlay.show { display: flex; }
         .modal-content { width: 100%; height: 100%; position: relative; }
-
-        /* 닫기 버튼 */
-        .close-btn {
-            position: absolute; top: 20px; right: 20px; z-index: 100;
-            color: white; font-size: 30px; cursor: pointer; background: rgba(0,0,0,0.5);
-            width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3);
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        /* 아이프레임 (화면 꽉 차게) */
+        .close-btn { position: absolute; top: 20px; right: 20px; z-index: 100; color: white; font-size: 30px; cursor: pointer; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; }
         iframe#lumaFrame { width: 100%; height: 100%; border: none; background: #000; }
-
-        /* 하단 섹션 버튼 */
-        .section-buttons {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; z-index: 100; background: rgba(0,0,0,0.6);
-            padding: 8px; border-radius: 30px; flex-wrap: wrap; justify-content: center; width: 90%; max-width: 600px;
-        }
-        .sec-btn {
-            padding: 8px 16px; background: rgba(255,255,255,0.1); color: white;
-            border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; cursor: pointer; font-size: 13px;
-        }
+        .section-buttons { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 100; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 30px; flex-wrap: wrap; justify-content: center; width: 90%; max-width: 600px; }
+        .sec-btn { padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; cursor: pointer; font-size: 13px; }
         .sec-btn.active { background: #6c5ce7; border-color: #6c5ce7; font-weight: bold; box-shadow: 0 0 10px #6c5ce7; }
 
-        /* 모바일 반응형 */
         @media screen and (max-width: 768px) {
             .container { flex-direction: column; }
             .sidebar { position:static; width: 100%; height: 40%; border-radius: 0; }
@@ -82,7 +79,7 @@
     <div class="container">
         <div id="map"></div>
         <div class="sidebar">
-            <div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="지역명 검색 (예: 뚝섬, 은평)"></div>
+            <div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="지역명 검색 (예: 강남역, 홍대)"></div>
             <ul class="park-list" id="parkList"></ul>
         </div>
     </div>
@@ -102,51 +99,238 @@
             mapOption = { center: new kakao.maps.LatLng(37.5986261, 127.0922478), level: 8 }; 
         var map = new kakao.maps.Map(mapContainer, mapOption); 
         
-        // 마커 이미지 설정 (스트릿=파랑, 파크=빨강)
+        // 🚀 장소 검색 서비스 추가
+        var ps = new kakao.maps.services.Places();
+
         var imageSize = new kakao.maps.Size(30, 30); 
         var imageOption = {offset: new kakao.maps.Point(17, 35)}; 
         var redMarkerImg = new kakao.maps.MarkerImage("./park.png", imageSize, imageOption);
         var blueMarkerImg = new kakao.maps.MarkerImage("./street.png", imageSize, imageOption);
 
-        // 🔴 전체 파크 데이터
+        // 🔴 데이터 정의
         var skateParks = [
-            // 1. 디디미 (3D 기능 보유)
             { 
-                title: "디디미 스케이트파크", 
-                type: "street", addr: "동대문구 답십리", 
-                lat: 37.5784979, lng: 127.0347585, 
-                level: "중급", levelClass: "medium", 
-                hours: "09:00-23:00", 
-                desc: "정릉천변, 3D 분석 완료! 버튼을 눌러 확인하세요.", 
-                // 👇 [중요] 여기에 님의 capture 주소를 넣으세요.
+                title: "디디미 스케이트파크", type: "street", addr: "동대문구 답십리", 
+                lat: 37.5784979, lng: 127.0347585, level: "복합", levelClass: "medium", hours: "09:00-23:00", 
+                slides: [
+                    { img: "./ledge.jpg", title: "① 메인 렛지", diff: "중급", diffClass: "diff-medium", desc: "높이: 37.6cm", detail: "올라타려면 알리 필수적, 경사로에 착지 시 부장 주의" },
+                    { img: "./quarterpipe.jpg", title: "② 쿼터 파이프", diff: "상급", diffClass: "diff-hard", desc: "진입각도: 56.5도 / 높이: 166cm", detail: "진입 각도가 가파름. 초보자 드랍인 연습 시 부상 주의." },
+                    { img: "./stair.jpg", title: "③ 4계단", diff: "중급", diffClass: "diff-easy", desc: "높이: 41cm / 길이: 174cm" , detail: "일반 계단에 비해 높이 낮음, 그러나 계단 길이가 긺, 빠른 속도 필요" }
+                ],
                 lumaSections: [
-                    { name: "① 스트릿", url: "https://lumalabs.ai/capture/323cd2c1-7df9-4095-bd49-86d8c5496773" },
-                    { name: "② 쿼터 파이프", url: "https://lumalabs.ai/capture/556d0432-15a6-4f21-8526-93125a5e27cf" },
-                    { name: "③ 메인 파크", url: "https://lumalabs.ai/capture/481b5834-750c-460d-90b9-e907776c5b84" }
-                     ],
+                    { name: "① Street section", url: "https://lumalabs.ai/capture/323cd2c1-7df9-4095-bd49-86d8c5496773" },
+                    { name: "② Quarter Pipe", url: "https://lumalabs.ai/capture/556d0432-15a6-4f21-8526-93125a5e27cf" },
+                    { name: "③ Transition Section", url: "https://lumalabs.ai/capture/2bba5927-5787-4284-bd77-59378a237347" },
+                    { name: "④ Stair set", url: "https://lumalabs.ai/capture/c78a526c-66a3-4ecb-bea1-6f84c65ca3b6" } 
+                ],
                 images: ["./dedimi1.jpg"] 
             },
-            // 2. 나머지 파크 데이터
             { title: "망우역 광장", type: "park", addr: "중랑구 망우동", lat: 37.5986261, lng: 127.0922478, level: "중급", levelClass: "medium", hours: "24시간", desc: "역 앞 대리석 광장.", images: ["./mangu1.jpg"] },
             { title: "훈련원 공원", type: "park", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08-20시", desc: "스트릿 성지, 대리석 타일 바닥", images: ["./culti1.jpg"] },
-            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.553866, lng: 127.046971, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
-            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5457255, lng: 127.0422293, level: "초/중급", levelClass: "easy", hours: "08-22시", desc: "숲속 감성. 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
-            { title: "이촌 한강공원", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
+            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.55388942037683, lng: 127.04620689153671, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
+            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5449601201967, lng: 127.04219698905945, level: "초/중급", levelClass: "easy", hours: "08-22시", desc: "숲속 감성. 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
+            { title: "한강 이촌 스케이트파크 ", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
             { title: "광나루 스케이트파크", type: "park", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwangnaru1.jpg"] },
-            { title: "노해 스케이트파크", type: "park", addr: "노원구 상계동", lat: 37.6484306, lng: 127.0704715, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.png"] },
-            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.529235, lng: 127.069562, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
+            { title: "노원 X-TOP", type: "park", addr: "노원구 상계동", lat: 37.648430, lng: 127.07047, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.jpg"] },
+            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.52968, lng: 127.071769, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
             { title: "난지 익스트림장", type: "park", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유.", images: ["./nanji1.jpg"] },
-            { title: "보라매공원", type: "park", addr: "동작구 신대방동", lat: 37.4908333, lng:126.9218189 , level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png"] },
+            { title: "보라매 X-GAME장", type: "park", addr: "동작구 신대방동", lat:  37.49085534924308, lng:126.9218516349792, level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png"] },
             { title: "익스트림 은평", type: "park", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00", desc: "은평구 최초 전용 파크.", images: ["./eunpyeong1.jpg"] }
         ];
 
         var markers = [];
         var infowindows = [];
+        var currentSlideIndices = {}; 
 
         renderList(skateParks);
         createMarkers(skateParks);
 
-        // 🟢 3D 모달 열기 함수 (URL 안전 변환)
+        // 🟢 검색 기능
+        var searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keyup', function(e) {
+            if(e.key === 'Enter') { 
+                var keyword = this.value.trim();
+                if(!keyword) return;
+
+                var filtered = skateParks.filter(function(item) {
+                    return item.title.includes(keyword) || item.addr.includes(keyword);
+                });
+
+                if(filtered.length > 0) {
+                    renderList(filtered); 
+                } else {
+                    ps.keywordSearch(keyword, placesSearchCB);
+                }
+            }
+        });
+
+        // 🟢 장소 검색 콜백
+        function placesSearchCB(data, status, pagination) {
+            if (status === kakao.maps.services.Status.OK) {
+                var target = data[0]; 
+                var center = new kakao.maps.LatLng(target.y, target.x);
+                map.setCenter(center); 
+
+                // 검색된 위치 확대
+                map.setLevel(4, {animate: true});
+
+                var sortedParks = skateParks.map(function(park) {
+                    var dist = getDistanceFromLatLonInKm(target.y, target.x, park.lat, park.lng);
+                    park.distance = dist.toFixed(1); 
+                    return park;
+                }).sort(function(a, b) {
+                    return a.distance - b.distance;
+                });
+
+                renderList(sortedParks);
+                alert(`'${target.place_name}' 주변 파크를 거리순으로 표시합니다.`);
+
+            } else {
+                alert('검색 결과가 없으며, 근처 파크를 찾을 수 없습니다.');
+            }
+        }
+
+        // 거리 계산 함수
+        function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+            var R = 6371; 
+            var dLat = deg2rad(lat2-lat1);  
+            var dLon = deg2rad(lon2-lon1); 
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            var d = R * c; 
+            return d;
+        }
+        function deg2rad(deg) { return deg * (Math.PI/180); }
+
+        function renderList(data) {
+            var listEl = document.getElementById('parkList');
+            listEl.innerHTML = ''; 
+            data.forEach(function(item) {
+                var li = document.createElement('li');
+                li.className = 'park-item';
+                var badge3D = (item.lumaSections) ? '<span style="color:#6c5ce7; font-weight:bold;"> [🧊3D]</span>' : '';
+                var distBadge = (item.distance) ? `<span class="dist-badge">📍 ${item.distance}km</span>` : '';
+
+                li.innerHTML = `<span class="item-title">${item.title} <span class="badge ${item.levelClass}">${item.level}</span>${distBadge}${badge3D}</span><span class="item-desc">${item.addr}</span>`;
+                
+                li.onclick = function() { 
+                    var moveLatLon = new kakao.maps.LatLng(item.lat, item.lng);
+                    map.setLevel(3, {animate: true}); // 리스트 클릭 시에도 확대
+                    map.panTo(moveLatLon);
+                };
+                listEl.appendChild(li);
+            });
+        }
+
+        function createMarkers(data) {
+            data.forEach(function(item, index) {
+                currentSlideIndices[index] = 0;
+                var currentImage = (item.type === 'street') ? blueMarkerImg : redMarkerImg;
+                var marker = new kakao.maps.Marker({
+                    map: map, position: new kakao.maps.LatLng(item.lat, item.lng), image: currentImage
+                });
+                
+                var content = generateInfoWindowContent(item, index);
+                var infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
+                infowindows.push(infowindow);
+
+                // 🟢 [추가된 기능] 마커 클릭 이벤트
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    // 1. 기존 창 닫기
+                    infowindows.forEach(iw => iw.close());
+                    // 2. 현재 창 열기
+                    infowindow.open(map, marker);
+                    // 3. ✨ 확대 및 이동 (레벨 3 = 상세 확대)
+                    map.setLevel(3, {animate: true});
+                    map.panTo(marker.getPosition());
+                });
+            });
+        }
+
+        function generateInfoWindowContent(item, index) {
+            var imgHtml = '';
+            var textHtml = '';
+            var hasMultiImg = (item.images && item.images.length > 1);
+
+            if (item.slides && item.slides.length > 0) {
+                var s = item.slides[0];
+                imgHtml = `
+                    <div class="info-img-box">
+                        <img id="slideImg_${index}" src="${s.img}" class="info-img" onerror="this.src='https://via.placeholder.com/300x150?text=No+Image'">
+                        <button class="slide-nav nav-prev" onclick="changeSlide(${index}, -1)">❮</button>
+                        <button class="slide-nav nav-next" onclick="changeSlide(${index}, 1)">❯</button>
+                    </div>`;
+                textHtml = `
+                    <div class="analysis-box">
+                        <span id="slideTitle_${index}" class="analysis-title">${s.title} <span class="diff-tag ${s.diffClass}">${s.diff}</span></span>
+                        <span id="slideDesc_${index}" class="analysis-data">📏 ${s.desc}</span>
+                        <span id="slideDetail_${index}" class="analysis-data">📝 ${s.detail}</span>
+                    </div>`;
+            } else {
+                var firstImg = (item.images && item.images.length > 0) ? item.images[0] : 'https://via.placeholder.com/300x150?text=No+Image';
+                if (hasMultiImg) {
+                    imgHtml = `
+                        <div class="info-img-box">
+                            <img id="slideImg_${index}" src="${firstImg}" class="info-img">
+                            <button class="slide-nav nav-prev" onclick="changeSlide(${index}, -1)">❮</button>
+                            <button class="slide-nav nav-next" onclick="changeSlide(${index}, 1)">❯</button>
+                        </div>`;
+                } else {
+                    imgHtml = `<div class="info-img-box"><img src="${firstImg}" class="info-img"></div>`;
+                }
+                textHtml = `<div class="text-slide"><div class="info-row">${item.desc}</div></div>`;
+            }
+
+            var btnHtml = `<div class="btn-group" style="margin-top:10px;">
+                <a href="https://map.kakao.com/link/to/${item.title},${item.lat},${item.lng}" target="_blank" class="btn-common btn-find">🚀 길찾기</a>`;
+            if(item.lumaSections) {
+                btnHtml += `<button class="btn-common btn-3d" onclick="openLumaModal(${index})">🧊 3D 시네마</button>`;
+            }
+            btnHtml += `</div>`;
+
+            return `<div class="wrap" style="width:300px;">
+                        <div class="info-header">${item.title}</div>
+                        ${imgHtml}
+                        <div style="padding:0 10px 10px 10px;">
+                            ${textHtml}
+                            ${btnHtml}
+                        </div>
+                    </div>`;
+        }
+
+        window.changeSlide = function(parkIndex, direction) {
+            var park = skateParks[parkIndex];
+            var isComplex = (park.slides && park.slides.length > 0);
+            var isSimple = (park.images && park.images.length > 1);
+            if (!isComplex && !isSimple) return;
+
+            var maxLen = isComplex ? park.slides.length : park.images.length;
+            var currentIdx = currentSlideIndices[parkIndex];
+            var nextIdx = currentIdx + direction;
+            if (nextIdx < 0) nextIdx = maxLen - 1;
+            if (nextIdx >= maxLen) nextIdx = 0;
+            
+            currentSlideIndices[parkIndex] = nextIdx; 
+
+            var imgEl = document.getElementById(`slideImg_${parkIndex}`);
+            if (imgEl) {
+                var nextSrc = isComplex ? park.slides[nextIdx].img : park.images[nextIdx];
+                imgEl.src = nextSrc;
+            }
+
+            if (isComplex) {
+                var data = park.slides[nextIdx];
+                var titleEl = document.getElementById(`slideTitle_${parkIndex}`);
+                var descEl = document.getElementById(`slideDesc_${parkIndex}`);
+                var detailEl = document.getElementById(`slideDetail_${parkIndex}`);
+
+                if (titleEl) titleEl.innerHTML = `${data.title} <span class="diff-tag ${data.diffClass}">${data.diff}</span>`;
+                if (descEl) descEl.innerHTML = `📏 ${data.desc}`;
+                if (detailEl) detailEl.innerHTML = `📝 ${data.detail}`;
+            }
+        }
+
         window.openLumaModal = function(index) {
             var data = skateParks[index];
             if(!data.lumaSections) { alert("3D 데이터가 없습니다!"); return; }
@@ -168,7 +352,6 @@
                 };
                 btnContainer.appendChild(btn);
             });
-
             loadLumaSafe(frame, data.lumaSections[0].url);
             modal.classList.add('show');
         }
@@ -178,67 +361,11 @@
             document.getElementById('lumaFrame').src = '';
         }
 
-        // 🟢 안전한 로딩 함수 (Iframe용 주소 자동 변환)
         function loadLumaSafe(frame, originalUrl) {
             var embedUrl = originalUrl.replace("capture", "embed");
-            // 화질 옵션(sparkles) 강제 적용
             var separator = embedUrl.includes("?") ? "&" : "?";
             frame.src = embedUrl + separator + "mode=sparkles&background=%23000000&autoLoad=true";
         }
-
-        function renderList(data) {
-            var listEl = document.getElementById('parkList');
-            listEl.innerHTML = ''; 
-            data.forEach(function(item) {
-                var li = document.createElement('li');
-                li.className = 'park-item';
-                var badge3D = (item.lumaSections) ? '<span style="color:#6c5ce7; font-weight:bold;"> [🧊3D]</span>' : '';
-                li.innerHTML = `<span class="item-title">${item.title} <span class="badge ${item.levelClass}">${item.level}</span>${badge3D}</span><span class="item-desc">${item.addr}</span>`;
-                li.onclick = function() { 
-                    var moveLatLon = new kakao.maps.LatLng(item.lat, item.lng);
-                    map.panTo(moveLatLon);
-                };
-                listEl.appendChild(li);
-            });
-        }
-
-        function createMarkers(data) {
-            data.forEach(function(data, index) {
-                // 타입에 따라 마커 색상 변경
-                var currentImage = (data.type === 'street') ? blueMarkerImg : redMarkerImg;
-                var marker = new kakao.maps.Marker({
-                    map: map, position: new kakao.maps.LatLng(data.lat, data.lng), image: currentImage
-                });
-                
-                var btnHtml = `<div class="btn-group">
-                                <a href="https://map.kakao.com/link/to/${data.title},${data.lat},${data.lng}" target="_blank" class="btn-common btn-find">🚀 길찾기</a>`;
-                if(data.lumaSections) {
-                    btnHtml += `<button class="btn-common btn-3d" onclick="openLumaModal(${index})">🧊 3D 시네마</button>`;
-                }
-                btnHtml += `</div>`;
-
-                var content = `<div class="wrap"><div class="info-header"><span class="info-title">${data.title}</span><span class="badge ${data.levelClass}">${data.level}</span></div><div class="text-slide"><div class="info-row"><span class="info-label">⏰</span>${data.hours}</div><div class="info-row"><span class="info-label">📝</span>${data.desc}</div>${btnHtml}</div></div>`;
-                var infowindow = new kakao.maps.InfoWindow({ content: content, removable: true });
-                infowindows.push(infowindow);
-
-                kakao.maps.event.addListener(marker, 'click', function() {
-                    for(var i=0; i<infowindows.length; i++) infowindows[i].close();
-                    infowindow.open(map, marker);
-                });
-            });
-        }
-        
-        // 검색 기능
-        var searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('keyup', function(e) {
-            if(e.key === 'Enter') { 
-                var keyword = this.value.trim();
-                var filtered = skateParks.filter(function(item) {
-                    return item.title.includes(keyword) || item.addr.includes(keyword);
-                });
-                renderList(filtered);
-            }
-        });
     </script>
 </body>
 </html>
