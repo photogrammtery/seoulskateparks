@@ -17,16 +17,15 @@
             background: rgba(255, 255, 255, 0.95); z-index: 20; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 12px; 
             display: flex; flex-direction: column; overflow: hidden; 
-            /* JS로 제어할 때 부드러움을 위해 기본 트랜지션 설정 (드래그 중엔 none됨) */
             transition: transform 0.1s ease-out;
         }
         
         /* 📱 모바일 핸들바 */
         .mobile-handle-area { 
-            display: none; /* PC 숨김 */
+            display: none; 
             width: 100%; padding: 15px 0; background: #fff; cursor: grab; 
             justify-content: center; align-items: center; border-bottom: 1px solid #f5f5f5; 
-            touch-action: none; /* 브라우저 스크롤 방지 (필수) */
+            touch-action: none; 
         }
         .mobile-handle-bar { width: 40px; height: 5px; background: #e0e0e0; border-radius: 10px; }
 
@@ -48,7 +47,7 @@
         .info-img { width: 100%; height: 100%; object-fit: cover; }
         .slide-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; cursor: pointer; padding: 8px 12px; font-size: 14px; z-index: 10; border-radius: 4px; }
         .nav-prev { left: 0; } .nav-next { right: 0; }
-        .text-slide { padding: 10px 15px; font-size: 13px; line-height: 1.6; }
+        .text-slide { font-size: 13px; line-height: 1.6; margin-top: 5px; }
         .info-row { margin-bottom: 5px; }
         .analysis-box { background: #f1f8ff; padding: 10px; margin-top: 5px; border-radius: 6px; border-left: 4px solid #6c5ce7; }
         .analysis-title { font-weight: bold; display: block; margin-bottom: 4px; color: #333; }
@@ -76,10 +75,10 @@
             .sidebar { 
                 position: absolute; 
                 top: auto; bottom: 0; left: 0; 
-                width: 100%; height: 70%; /* 기본 높이 (열렸을 때) */
+                width: 100%; height: 70%; 
                 border-radius: 20px 20px 0 0; 
                 z-index: 1000;
-                transform: translateY(0); /* 기본값 (JS로 제어) */
+                transform: translateY(0); 
             }
             #map { height: 100%; }
             .mobile-handle-area { display: flex; }
@@ -124,59 +123,44 @@
         var redMarkerImg = new kakao.maps.MarkerImage("./park.png", imageSize, imageOption);
         var blueMarkerImg = new kakao.maps.MarkerImage("./street.png", imageSize, imageOption);
 
-        // 🟢 자유 드래그 기능 (Free Drag with Constraints)
+        // 🟢 자유 드래그 기능
         const sidebar = document.getElementById('sidebar');
         const handle = document.getElementById('dragHandle');
         
         let startY = 0;
-        let currentTranslateY = 0; // 현재 이동된 위치 (0 = 완전 열림)
-        let tempTranslateY = 0;    // 드래그 중 임시 위치
+        let currentTranslateY = 0;
+        let tempTranslateY = 0;
         let isDragging = false;
 
-        // 1. 터치 시작
         handle.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
             isDragging = true;
-            sidebar.style.transition = 'none'; // 실시간 반응을 위해 애니메이션 끔
+            sidebar.style.transition = 'none';
         });
 
-        // 2. 터치 이동 (실시간 이동 + 한계점 설정)
         handle.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
-            
             const touchY = e.touches[0].clientY;
-            const diff = touchY - startY; // 이동한 거리
-            
-            // 새로운 위치 계산 (기존 위치 + 이번 이동 거리)
+            const diff = touchY - startY;
             let newY = currentTranslateY + diff;
-
-            // ⛔ 위쪽 한계 (0px 이상 못 올라가게 - 완전 열림 상태)
             if (newY < 0) newY = 0;
-
-            // ⛔ 아래쪽 한계 (화면 높이 - 핸들 크기만큼만 남기고)
-            // 사이드바 전체 높이에서 60px(핸들+여유) 정도 빼고 내려가면 멈춤
             const maxDown = sidebar.offsetHeight - 60; 
             if (newY > maxDown) newY = maxDown;
-
             sidebar.style.transform = `translateY(${newY}px)`;
-            tempTranslateY = newY; // 임시 저장
+            tempTranslateY = newY; 
         });
 
-        // 3. 터치 종료 (그 자리에 멈춤)
         handle.addEventListener('touchend', () => {
             isDragging = false;
-            // 마지막 위치를 현재 위치로 저장 (다음 드래그는 여기서 시작)
             currentTranslateY = tempTranslateY;
-            // 약간의 부드러움을 위해 다시 트랜지션 켜기 (필수는 아님)
             sidebar.style.transition = 'transform 0.1s ease-out';
         });
 
-        // 🟢 헬퍼 함수: 강제로 열거나 닫기 (검색/클릭 시 사용)
         function forceOpenSidebar() {
-            if(window.innerWidth > 768) return; // PC에선 무시
+            if(window.innerWidth > 768) return; 
             sidebar.style.transition = 'transform 0.3s ease-out';
             sidebar.style.transform = 'translateY(0px)';
-            currentTranslateY = 0; // 위치값 초기화
+            currentTranslateY = 0; 
         }
 
         function forceCloseSidebar() {
@@ -184,10 +168,9 @@
             const maxDown = sidebar.offsetHeight - 60;
             sidebar.style.transition = 'transform 0.3s ease-out';
             sidebar.style.transform = `translateY(${maxDown}px)`;
-            currentTranslateY = maxDown; // 위치값 업데이트
+            currentTranslateY = maxDown; 
         }
 
-        // 검색창 포커스 시 자동 열기
         document.getElementById('searchInput').addEventListener('focus', function() {
             forceOpenSidebar();
         });
@@ -210,16 +193,16 @@
                 ],
                 images: ["./dedimi1.jpg"] 
             },
-            { title: "망우역 광장", type: "park", addr: "중랑구 망우동", lat: 37.5986261, lng: 127.0922478, level: "중급", levelClass: "medium", hours: "24시간", desc: "역 앞 대리석 광장.", images: ["./mangu1.jpg"] },
-            { title: "훈련원 공원", type: "park", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08-20시", desc: "스트릿 성지, 대리석 타일 바닥", images: ["./culti1.jpg"] },
-            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.55388942037683, lng: 127.04620689153671, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등, 평지 공간 협소.", images: ["./salgoji1.jpg"] },
-            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5449601201967, lng: 127.04219698905945, level: "초/중급", levelClass: "easy", hours: "08-22시", desc: "숲속 감성. 바닥 안 좋음", images: ["./seoulforest1.jpg"] },
-            { title: "한강 이촌 스케이트파크 ", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "다리 밑 그늘. 바닥 부드러움.", images: ["./ichon1.jpg"] },
-            { title: "광나루 스케이트파크", type: "park", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwangnaru1.jpg"] },
-            { title: "노원 X-TOP", type: "park", addr: "노원구 상계동", lat: 37.648430, lng: 127.07047, level: "상급", levelClass: "hard", hours: "09-22시", desc: "올림픽 규격. 보울(Bowl) 보유.", images: ["./nohae1.jpg"] },
-            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.52968, lng: 127.071769, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttukseom1.jpg"] },
-            { title: "난지 익스트림장", type: "park", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-18시", desc: "하프파이프 보유.", images: ["./nanji1.jpg"] },
-            { title: "보라매 X-GAME장", type: "park", addr: "동작구 신대방동", lat:  37.49085534924308, lng:126.9218516349792, level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png"] },
+            { title: "망우역 광장", type: "park", addr: "중랑구 망우동", lat: 37.5986261, lng: 127.0922478, level: "중급", levelClass: "medium", hours: "24시간", desc: "역 앞 대리석 광장.", images: ["./mang1.jpg"] },
+            { title: "훈련원 공원", type: "park", addr: "중구 을지로", lat: 37.567475, lng: 127.004690, level: "상급", levelClass: "hard", hours: "08-20시", desc: "스트릿 위주, 바닥 상태 나쁨", images: ["./cult1.jpg","./cult2.jpg","./cult3.jpg"] },
+            { title: "살곶이 스케이트파크", type: "park", addr: "성동구 사근동", lat: 37.55388942037683, lng: 127.04620689153671, level: "초/중급", levelClass: "easy", hours: "08-23시", desc: "23시 소등, 평지 공간 협소.", images: ["./sal1.png","./sal2.png"] },
+            { title: "서울숲 스케이트파크", type: "park", addr: "성동구 성수동", lat: 37.5449601201967, lng: 127.04219698905945, level: "초/중급", levelClass: "easy", hours: "08-22시", desc: "바닥 재질 나쁨, 넓은 평지 공간", images: ["./seoulforest1.png","./seoulforest2.png","./seoulforest3.png"] },
+            { title: "한강 이촌 스케이트파크 ", type: "park", addr: "용산구 이촌동", lat: 37.5193588, lng: 126.9661931, level: "초급", levelClass: "easy", hours: "24시간", desc: "시설 노후화.", images: ["./echon1.jpg","./echon2.jpg","./echon3.jpg"] },
+            { title: "광나루 스케이트파크", type: "park", addr: "강동구 암사동", lat: 37.5395428, lng: 127.114726, level: "중급", levelClass: "medium", hours: "24시간", desc: "노란 기물, 바닥 매우 매끄러움.", images: ["./gwang1.jpg","./gwang2.jpg"] },
+            { title: "노원 X-TOP", type: "park", addr: "노원구 상계동", lat: 37.648430, lng: 127.07047, level: "상급", levelClass: "hard", hours: "09-22시", desc: "보울(Bowl) 보유, 3개 섹션으로 구성", images: ["./nohae1.png","nohae2.jpg","./nohae3.jpg"] },
+            { title: "뚝섬 한강공원", type: "park", addr: "광진구 자양동", lat: 37.52968, lng: 127.071769, level: "상급", levelClass: "hard", hours: "24시간", desc: "서울 최대 규모 파크", images: ["./ttuk1.jpg","./ttuk2.jpg","./ttuk3.jpg","./ttuk4.jpg"] },
+            { title: "난지 익스트림장", type: "park", addr: "마포구 상암동", lat: 37.568461, lng: 126.874672, level: "중급", levelClass: "medium", hours: "09-22시", desc: "대형 미니파이프, 다양한 기물 보유.", images: ["./nanji.jpg","./nanji2.jpg","./nanji3.jpg"] },
+            { title: "보라매 X-GAME장", type: "park", addr: "동작구 신대방동", lat:  37.49085534924308, lng:126.9218516349792, level: "초급", levelClass: "easy", hours: "06-22시", desc: "대회 코스 구성, 헬멧 필수.", images: ["./boramae1.png","./boramae2.png","./boramae3.png","./boramae4.png"] },
             { title: "익스트림 은평", type: "park", addr: "은평구 진관동", lat: 37.638671, lng: 126.9172385, level: "중급", levelClass: "medium", hours: "12:00-19:00", desc: "은평구 최초 전용 파크.", images: ["./eunpyeong1.jpg"] }
         ];
 
@@ -243,7 +226,7 @@
 
                 if(filtered.length > 0) {
                     renderList(filtered); 
-                    forceOpenSidebar(); // 결과 나오면 강제 열기
+                    forceOpenSidebar();
                 } else {
                     ps.keywordSearch(keyword, placesSearchCB);
                 }
@@ -266,7 +249,7 @@
                 });
 
                 renderList(sortedParks);
-                forceOpenSidebar(); // 결과 나오면 강제 열기
+                forceOpenSidebar();
                 alert(`'${target.place_name}' 주변 파크를 거리순으로 표시합니다.`);
             } else {
                 alert('검색 결과가 없으며, 근처 파크를 찾을 수 없습니다.');
@@ -300,7 +283,6 @@
                     var moveLatLon = new kakao.maps.LatLng(item.lat, item.lng);
                     map.setLevel(3, {animate: true}); 
                     map.panTo(moveLatLon);
-                    // 리스트 클릭 시 모바일 창 내리기 (지도 확보용)
                     forceCloseSidebar();
                 };
                 listEl.appendChild(li);
@@ -328,6 +310,7 @@
             });
         }
 
+        // 🛠️ 운영시간 표시 로직 수정됨
         function generateInfoWindowContent(item, index) {
             var imgHtml = '';
             var textHtml = '';
@@ -369,10 +352,14 @@
             }
             btnHtml += `</div>`;
 
+            // ✨ 운영시간 HTML 생성
+            var hoursHtml = `<div style="margin-bottom: 5px; color: #333; font-weight: bold; font-size: 13px;">🕒 ${item.hours}</div>`;
+
             return `<div class="wrap" style="width:300px;">
                         <div class="info-header">${item.title}</div>
                         ${imgHtml}
-                        <div style="padding:0 10px 10px 10px;">
+                        <div style="padding: 15px 10px 10px 10px;">
+                            ${hoursHtml}
                             ${textHtml}
                             ${btnHtml}
                         </div>
